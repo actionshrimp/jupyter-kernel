@@ -92,14 +92,18 @@ let main_loop connection_info kernel =
     Log.log "Dying.\n";
     Lwt.fail Exit
 
+let init_called = ref false
+
 let init ?(additional_args=[]) ~usage =
   let args = mk_args ~additional_args () in
   Arg.parse
     args
     (fun s -> failwith ("invalid anonymous argument: " ^ s))
-    usage
+    usage;
+  init_called := true
 
 let main ~kernel =
+  if (not !init_called) then failwith "Please call Client_main.init before Client_main.main";
   let connection_info = mk_connection_info () in
   let%lwt() = Lwt_io.printf "Starting kernel for `%s`\n" kernel.C.Kernel.language in
   Log.log "start main...\n";
