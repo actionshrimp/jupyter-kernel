@@ -24,9 +24,9 @@ let ci_control = ref 50004
 let ci_transport = ref "tcp"
 let ci_ip_addr = ref ""
 
-let mk_args ~args () =
+let mk_args ~additional_args () =
   Arg.(align
-      (args @
+      (additional_args @
          [
            "--log", String (Log.open_log_file), " <file> open log file";
            "--connection-file", Set_string(connection_file_name),
@@ -92,14 +92,15 @@ let main_loop connection_info kernel =
     Log.log "Dying.\n";
     Lwt.fail Exit
 
-let main ?(args=[]) ~usage ~kernel_init =
-  let args = mk_args ~args () in
+let init ?(additional_args=[]) ~usage =
+  let args = mk_args ~additional_args () in
   Arg.parse
     args
     (fun s -> failwith ("invalid anonymous argument: " ^ s))
-    usage;
+    usage
+
+let main ~kernel =
   let connection_info = mk_connection_info () in
-  let%lwt kernel = kernel_init () in
   let%lwt() = Lwt_io.printf "Starting kernel for `%s`\n" kernel.C.Kernel.language in
   Log.log "start main...\n";
   main_loop connection_info kernel >|= fun () ->
